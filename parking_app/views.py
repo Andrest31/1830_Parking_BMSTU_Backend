@@ -1,6 +1,6 @@
 from django.http import HttpResponse
-from .models import Parking
-from django.shortcuts import render, redirect
+from .models import Parking, Order, OrderItem
+from django.shortcuts import get_object_or_404, render, redirect
 
 # Данные парковок (коллекция)
 PARKINGS_DATA = [
@@ -78,17 +78,18 @@ def MainPage(request):
         work_hour = int(work_hour)
         filtered_parkings = [
             p for p in parkings 
-            if p['open_hour'] <= work_hour <= p['close_hour']
+            if p.open_hour <= work_hour <= p.close_hour
         ]
     else:
         filtered_parkings = parkings
     
+    order = Order.objects.filter(user=request.user, status='draft').first()
     total_quantity = sum(item['quantity'] for item in CURRENT_ORDER['items'])
     
     context = {
         'parkings': filtered_parkings,
         'search_hour': work_hour or '',
-        'order': CURRENT_ORDER,
+        'order': order,
         'total_quantity': total_quantity
     }
     return render(request, 'MainPage.html', context)
@@ -102,43 +103,46 @@ def ParkingPage(request, parking_id):
         return HttpResponse("Парковка не найдена", status=404)
 
 def add_to_order(request, parking_id):
-    parking = next((p for p in PARKINGS_DATA if p['id'] == parking_id), None)
-        
-    if parking:
-            item = next((item for item in CURRENT_ORDER['items'] if item['parking_id'] == parking_id), None)
-            
-            if item:
-                item['quantity'] += 1
-            else:
-                CURRENT_ORDER['items'].append({
-                    'parking_id': parking_id,
-                    'parking_name': parking['short_name'],
-                    'quantity': 1,
-                    'image': parking['image_card']
-                })
+    # Получаем парковку или возвращаем 404
+    parking = get_object_or_404(Parking, id=parking_id, is_active=True)
+    
+    # Получаем или создаем черновик заявки для пользователя
+    order, created = Order.objects.get_or_create(
+        user=request.user,
+        status='draft',
+        defaults={
+            'user_name': request.user.get_full_name() or request.user.username,
+            'car_number': '',  # Можно установить значение по умолчанию
+        }
+    )
+    
+    # Пытаемся найти существующий элемент заявки для этой парковки
+    item, item_created = OrderItem.objects.get_or_create(
+        order=order,
+        parking=parking,
+        defaults={
+            'quantity': 1,
+        }
+    )
+    
+    # Если элемент уже существовал, увеличиваем количество
+    if not item_created:
+        item.quantity += 1
+        item.save()
     
     return redirect('MainPage')
 
 def PassPage(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
     if request.method == 'POST':
-        # Обработка сохранения данных формы
-        CURRENT_ORDER['user_name'] = request.POST.get('user_name', '')
-        CURRENT_ORDER['car_number'] = request.POST.get('car_number', '')
-        # Здесь можно добавить обработку даты, если нужно
-        
-        # Обработка изменения количества
-        for item in CURRENT_ORDER['items']:
-            quantity = request.POST.get(f'quantity_{item["parking_id"]}', 1)
-            item['quantity'] = max(1, int(quantity))  # Не меньше 1
-        
-        return redirect('pass_page', order_id=order_id)
+        order.user_name = request.POST.get('user_name', '')
+        order.car_number = request.POST.get('car_number', '')
+        order.save()
+        return redirect('pass_page', order_id=order.id)
     
-    if order_id != CURRENT_ORDER['id']:
-        return HttpResponse("Заявка не найдена", status=404)
-    
-    return render(request, 'PassPage.html', {
-        'order': CURRENT_ORDER
-    })
+    items = order.items.select_related('parking').all()
+    return render(request, 'PassPage.html', {'order': order, 'items': items})
+
 
 def clear_order(request):
     CURRENT_ORDER['items'] = []

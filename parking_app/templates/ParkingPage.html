@@ -28,7 +28,7 @@
   </div>
 
   <div class="image-container">
-    <img src="{{ parking.image_discr }}" alt="" class="parking-img">
+    <img src="{{ parking.description_url }}" alt="" class="parking-img">
     <div class="parking-title">Аренда места у {{ parking.short_name }}</div>
   </div>
 
@@ -36,7 +36,7 @@
     <div class="parking-info-cards">
       <div class="parking-info-card">
         <div class="info-card-title">Назначение</div>
-        <div class="info-card-discription">31</div>
+        <div class="info-card-discription">{{ parking.description }}</div>
       </div>
       <div class="parking-info-card">
         <div class="info-card-title">Время открытия</div>

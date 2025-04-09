@@ -41,7 +41,7 @@
             <div class="PassPageDiscription">Ваше имя</div>
             <input type="text" name="user_name" class="PassInputField" value="{{ order.user_name }}" required>
             <div class="PassPageDiscription">Гос номер ТС</div>
-            <input type="text" name="car_number" class="PassInputField" value="{{ order.car_number }}" required>
+            <input type="text" name="car_number" class="PassInputField" value="{{ order.state_number }}" required>
             <div class="PassPageDiscription">Срок действия абонемента</div>
             <input type="date" name="expiry_date" class="PassInputField" required>
           </div>
@@ -50,16 +50,16 @@
             <div class="Pass-1830-Logo">1830</div>
             <div class="PassPageDiscription">Информация об абонементе:</div>
             <div class="Pass-Cards">
-              {% for item in order.items %}
+              {% for item in items %}
               <div class="pass-card">
                 <div class="pass-card-left-block">
                   <img src="{{ item.image }}" alt="" class="pass-parking-img">
-                  <div class="pass-parking-name">{{ item.parking_name }}</div>  
+                  <div class="pass-parking-name">{{ item.parking.short_name }}</div>  
                 </div>
                 <div class="pass-card-right-block">
-                  <a href="{% url 'update_quantity' item.parking_id 'decrease' %}" class="pass-minus-button">-</a>
+                  <a href="{% url 'update_quantity' item.quantity 'decrease' %}" class="pass-minus-button">-</a>
                   <div class="pass-quantity">места: {{ item.quantity }}</div>
-                  <a href="{% url 'update_quantity' item.parking_id 'increase' %}" class="pass-minus-button">+</a>
+                  <a href="{% url 'update_quantity' item.quantity 'increase' %}" class="pass-minus-button">+</a>
                   <a href="{% url 'remove_item' item.parking_id %}">
                     <img src="{% static 'trash.svg' %}" alt="" class="trash-button">
                   </a>
