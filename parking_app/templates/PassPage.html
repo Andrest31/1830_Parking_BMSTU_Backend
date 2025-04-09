@@ -1,0 +1,108 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="utf-8">
+    <title>BMSTU</title>
+    <link rel="stylesheet" href="{% static 'Header.css' %}">
+    <link rel="stylesheet" href="{% static 'Footer.css' %}">
+    <link rel="stylesheet" href="{% static 'PassPage.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header_line">
+    <div class="header_content">
+      <img src="{%static 'BMSTU_Logo.svg' %}" alt="" class="bmstu_logo">
+      <div class="btn-1830">1830</div>
+      <div class="parking-text-content">
+        <div class="parking-text">Паркинг</div>
+        <div class="parking-text">МГТУ им Баумана</div>
+      </div>
+
+      <div class="navbar">
+        <a href="{% url 'MainPage' %}" class="navbar-button">
+          <div class="navbar-item">Парковки</div>
+        </a>
+        <img src="{%static 'Profile.svg' %}" alt="" class="profile">
+      </div>
+    </div>
+  </div>
+
+  <div class="Pass-page">
+    <img src="http://localhost:9000/images/passPage.jpg" alt="" class="PassPage-img">
+    <div class="PassPage-Content">
+      <form method="POST" action="{% url 'pass_page' order.id %}">
+        {% csrf_token %}
+        <div class="PassPage-top-block">
+          <div class="left-block">
+            <div class="PassPageTitle">Оформление абонемента</div>
+            <div class="PassPageTitleDiscription">Все поля обязательны для заполнения</div>
+            <div class="PassPageDiscription">Ваше имя</div>
+            <input type="text" name="user_name" class="PassInputField" value="{{ order.user_name }}" required>
+            <div class="PassPageDiscription">Гос номер ТС</div>
+            <input type="text" name="car_number" class="PassInputField" value="{{ order.car_number }}" required>
+            <div class="PassPageDiscription">Срок действия абонемента</div>
+            <input type="date" name="expiry_date" class="PassInputField" required>
+          </div>
+  
+          <div class="right-block">
+            <div class="Pass-1830-Logo">1830</div>
+            <div class="PassPageDiscription">Информация об абонементе:</div>
+            <div class="Pass-Cards">
+              {% for item in order.items %}
+              <div class="pass-card">
+                <div class="pass-card-left-block">
+                  <img src="{{ item.image }}" alt="" class="pass-parking-img">
+                  <div class="pass-parking-name">{{ item.parking_name }}</div>  
+                </div>
+                <div class="pass-card-right-block">
+                  <a href="{% url 'update_quantity' item.parking_id 'decrease' %}" class="pass-minus-button">-</a>
+                  <div class="pass-quantity">места: {{ item.quantity }}</div>
+                  <a href="{% url 'update_quantity' item.parking_id 'increase' %}" class="pass-minus-button">+</a>
+                  <a href="{% url 'remove_item' item.parking_id %}">
+                    <img src="{% static 'trash.svg' %}" alt="" class="trash-button">
+                  </a>
+                </div>
+              </div>
+              {% empty %}
+              <div class="pass-card" style="justify-content: center;">
+                <div class="pass-parking-name">В заявке нет парковочных мест</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="PassButtons">
+          <a href="{% url 'clear_order' %}"><div class="clearButton">Очистить</div></a>
+          <div class="AcceptButton">Принять</div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-Title">© 2025 Московский государственный технический университет им. Н.Э. Баумана</div>
+    <div class="white-line"></div>
+    <div class="footer-info">
+      <div class="contacts-block">
+        <div class="contacts-title">Контакты учреждения</div>
+        <div class="social">
+          <div class="telephone">+79999686720</div>
+          <img src="{% static 'telegram.svg' %}" alt="" class="telegram">
+          <img src="{% static 'vk.svg' %}" alt="" class="vk">
+        </div>
+        <div class="telephone">andrestvlad@gmail.com</div>
+      </div>
+      <div class="address-block">
+        <div class="contacts-title">Юридический адрес</div>
+        <div class="telephone">105005, Россия, Москва, ул. 2-я Бауманская, 5</div>
+      </div>
+    </div>
+
+    <div class="disc-info">Оставаясь на сайте, вы выражаете свое согласие на обработку персональных данных и соглашаетесь с Политикой 
+      Информация об объектах, приведённая на сайте, в том числе изображения и цены, не являются офертой</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,160 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="utf-8">
+    <title>BMSTU</title>
+    <link rel="stylesheet" href="{% static 'Header.css' %}">
+    <link rel="stylesheet" href="{% static 'MainPage.css' %}">
+    <link rel="stylesheet" href="{% static 'Footer.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header_line">
+    <div class="header_content">
+      <img src="{%static 'BMSTU_Logo.svg' %}" alt="" class="bmstu_logo">
+      <div class="btn-1830">1830</div>
+      <div class="parking-text-content">
+        <div class="parking-text">Паркинг</div>
+        <div class="parking-text">МГТУ им Баумана</div>
+      </div>
+
+      <div class="navbar">
+        <div class="navbar-item">Парковки</div>
+        <img src="{%static 'Profile.svg' %}" alt="" class="profile">
+      </div>
+    </div>
+  </div>
+  
+  <div class="mainpage">
+    <div class="title-content">
+  <div class="title-items-container">
+    <div class="title-item1">Парковочные места для сотрудников университета</div>
+    <div class="title-item2">Доступны посуточная и бессрочная аренда мест. Срок действия абонемента любой. За абонементом закрепляется пропуск на парковку, парковаться можно на любом свободном месте. </div>
+    <div class="title-item3">Перейти</div>
+  </div>
+  <img src="{% static 'Kaban.jpg' %}" alt="" class="title-img">
+    </div>
+
+    <div class="catalog">
+      <div class="top-cont">
+        <div class="Rent_line">
+          <div class="Rent_title">Аренда места</div>
+          <a href="{% url 'pass_page' order.id %}">
+            <img src="{%static 'list.svg' %}" alt="" class="Pass-button">
+          </img>
+          </a>
+        </div>
+        <div class="search-line">
+          <form method="GET">
+            <input 
+              name="work_hour" 
+              placeholder="Время работы" 
+              class="search-bar"
+              value="{{ request.GET.work_hour }}"
+              min="0" 
+              max="23"
+            >
+            <button type="submit" class="search-button">Найти</button>
+          </form>
+        </div>
+      </div>
+      
+
+
+      <div class="catalog-content">
+        {% for parking in parkings %}
+          {% if not work_hour or parking.open_hour <= work_hour <= parking.close_hour %}
+          <div class="catalog-item">
+            <div class="catalog-card">
+              <img src="{% static 'mock.jpg' %}" alt="" class="card-img">
+              <div class="card-info">
+                <div class="parking-name">{{ parking.name }}</div>
+                <div class="parking-place">{{ parking.place }}</div>
+              </div>
+              <div class="parking-worktime">Открыто: {{ parking.open_hour }}:00 - {{ parking.close_hour }}:00</div>
+              <a href="{% url 'ParkingPage' parking.id %}"><div class="card-button">подробнее</div></a>
+            </div>
+
+            <div class="item-lower-buttons">
+              <div class="quantity-interface">
+                <div class="minus-button">-</div>
+                <div class="quantity">0</div>
+                <div class="minus-button">+</div>
+              </div>
+              <div class="add-button">
+                <a href="{% url 'add_to_order' parking.id %}" class="add_to_o_btn">Добавить</a>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        {% empty %}
+          <div class="no-results">Нет доступных парковок для выбранного времени</div>
+        {% endfor %}
+      </div>
+    </div>
+
+
+    <div class="quest">
+      <div class="quest-title">Основные вопросы</div>
+      <div class="quest-content">
+        <div class="quest-img-cont">
+          <img src="{% static 'quest.jpg' %}" alt="" class="quest-img1">
+          <img src="{% static 'quest.jpg' %}" alt="" class="quest-img2">
+        </div>
+        <div class="quest-block">
+          <div class="quest-item">
+              <div class="quest-btn">+</div>
+              <div class="quest">Сколько мест закрепляется за одним сотрудником?</div>
+            </div>
+
+          <div class="quest-item">
+            <div class="quest-btn">+</div>
+            <div class="quest">Как происходит оплата?</div>
+          </div>
+          <div class="quest-item">
+            <div class="quest-btn">+</div>
+            <div class="quest">Как проехать на парковку?</div>
+          </div>
+          <div class="quest-item">
+            <div class="quest-btn">+</div>
+            <div class="quest">Можно ли оформить платеж в рассрочку?</div>
+          </div>
+          <div class="quest-item">
+            <div class="quest-btn">+</div>
+            <div class="quest">Можно ли отменить абонемент?</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div class="footer-Title">© 2025 Московский государственный технический университет им. Н.Э. Баумана</div>
+      <div class="white-line"></div>
+      <div class="footer-info">
+        <div class="contacts-block">
+          <div class="contacts-title">Контакты учреждения</div>
+          <div class="social">
+            <div class="telephone">+79999686720</div>
+            <img src="{% static 'telegram.svg' %}" alt="" class="telegram">
+            <img src="{% static 'vk.svg' %}" alt="" class="vk">
+          </div>
+          <div class="telephone">andrestvlad@gmail.com</div>
+        </div>
+        <div class="address-block">
+          <div class="contacts-title">Юридический адрес</div>
+          <div class="telephone">105005, Россия, Москва, ул. 2-я Бауманская, 5</div>
+        </div>
+      </div>
+
+      <div class="disc-info">Оставаясь на сайте, вы выражаете свое согласие на обработку персональных данных и соглашаетесь с Политикой 
+        Информация об объектах, приведённая на сайте, в том числе изображения и цены, не являются офертой</div>
+    </div>
+
+  </div>
+
+
+</body>
+</html>

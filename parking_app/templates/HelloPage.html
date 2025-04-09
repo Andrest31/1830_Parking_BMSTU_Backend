@@ -1,0 +1,72 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="utf-8">
+    <title>BMSTU</title>
+    <link rel="stylesheet" href="{% static 'Header.css' %}">
+    <link rel="stylesheet" href="{% static 'Footer.css' %}">
+    <link rel="stylesheet" href="{% static 'HelloPage.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header_line">
+    <div class="header_content">
+      <img src="{%static 'BMSTU_Logo.svg' %}" alt="" class="bmstu_logo">
+      <div class="btn-1830">1830</div>
+      <div class="parking-text-content">
+        <div class="parking-text">Паркинг</div>
+        <div class="parking-text">МГТУ им Баумана</div>
+      </div>
+
+      <div class="navbar">
+        <a href="/parkings" class="navbar-button">
+          <div class="navbar-item">Парковки</div>
+        </a>
+        <img src="{%static 'Profile.svg' %}" alt="" class="profile">
+      </div>
+    </div>
+  </div>
+
+  <div class="HelloPage">
+    <img src="{% static 'HelloPage.jpg' %}" alt="" class="HelloPage-img">
+    <div class="HelloPage-Content">
+      <div class="HelloPageTitle">Добро пожаловать!</div>
+      <div class="HelloPageTitleDiscription">Мы рады видеть вас на нашей странице. Узнайте больше о нас! Данная система предназначена для хранения справочных данных о бронировании парковочных мест. Сотрудник университета, заметивший свободные места на парковке и рассчитавший период нахождения своего транспортного средства или транспортных средств на парковке, обращается к сервису с целью регистрации абонемента.</div>
+    </div>
+  </div>
+
+  <div class="subscribe">
+    <div class="subscribe-title">Подпишитесь на нашу рассылку</div>
+    <div class="subscribe-block">
+      <div class="mail-input">Введите вашу почту</div>
+      <div class="sub-btn">Подтвердить</div>
+    </div>
+  </div>
+
+    <div class="footer">
+      <div class="footer-Title">© 2025 Московский государственный технический университет им. Н.Э. Баумана</div>
+      <div class="white-line"></div>
+      <div class="footer-info">
+        <div class="contacts-block">
+          <div class="contacts-title">Контакты учреждения</div>
+          <div class="social">
+            <div class="telephone">+79999686720</div>
+            <img src="{% static 'telegram.svg' %}" alt="" class="telegram">
+            <img src="{% static 'vk.svg' %}" alt="" class="vk">
+          </div>
+          <div class="telephone">andrestvlad@gmail.com</div>
+        </div>
+        <div class="address-block">
+          <div class="contacts-title">Юридический адрес</div>
+          <div class="telephone">105005, Россия, Москва, ул. 2-я Бауманская, 5</div>
+        </div>
+      </div>
+
+      <div class="disc-info">Оставаясь на сайте, вы выражаете свое согласие на обработку персональных данных и соглашаетесь с Политикой 
+        Информация об объектах, приведённая на сайте, в том числе изображения и цены, не являются офертой</div>
+    </div>
+
+</body>
+</html>

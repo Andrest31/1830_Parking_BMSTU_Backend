@@ -1,0 +1,168 @@
+body{
+    width: 1520px;
+    margin: 0;
+}
+.Pass-Page{
+    position: relative;
+    height: 806px;
+}
+
+.PassPage-img{
+    width: 100%;
+    height: 806px;
+}
+
+.PassPage-Content{
+    margin-left: 160px;
+    font-family: 'Dela Gothic One', sans-serif;
+    margin-top: -740px;
+    position: absolute;
+    color: white;
+}
+.PassPage-top-block{
+    display: flex;
+    gap: 235px;
+}
+.left-block{
+    width: 630px;
+}
+.PassPageTitle{
+    font-family: 'Dela Gothic One', sans-serif;
+    font-size: 40px;
+}
+.PassPageTitleDiscription{
+    font-family: 'DM Sans', sans-serif;
+    font-size: 20px;
+    margin-bottom: 18px;
+}
+.PassPageDiscription
+{
+    font-family: 'DM Sans', sans-serif;
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+.PassInputField{
+    font-size: 16px;
+    background-color: white;
+    width: 360px;
+    color: #6B6666;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 7px;
+    height: 32px;
+    align-content: center;
+    padding-left: 5px;
+}
+.right-block{
+    position: relative;
+    right: 0px;
+    width: 333px;
+    margin-top: -120px;
+    align-content: center;
+    text-align: center;
+}
+.Pass-1830-Logo{
+    font-size: 32px;
+    text-align: center;
+    height: 78px;
+    align-content: center;
+    border: white 4px solid;
+    margin-bottom: 20px;
+}
+.pass-card{
+    display: flex;
+    border: white 4px solid;
+    height: 43px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.pass-card-left-block{
+    display: flex;
+}
+.pass-parking-img{
+    margin-left: 13px;
+    margin-right: 17px;
+    height: 25px;
+}
+.pass-parking-name{
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+.pass-card-right-block{
+    display: flex;
+    font-family: 'DM Sans', sans-serif;
+    right: 15px;
+    position: absolute;
+}
+.trash-button{
+    stroke: white;
+    stroke-width: 1px;
+    margin-left: 3px;
+    cursor: pointer;
+}
+.pass-minus-button{
+    margin: 0 7px;
+    cursor: pointer;
+    border-radius: 20px;
+    height: 20px;
+    width: 20px;
+    color: black;
+    background-color: white;
+    align-self: center;
+    align-content: center;
+    border: black 1px solid;
+}
+
+.PassButtons{
+    margin-top: 170px;
+    width: 457px;
+    text-align: center;
+}
+.clearButton{
+    color: #0000b4;
+    height: 35px;
+    align-content: center;
+    background-color: white;
+    font-size: 16px;
+    margin-bottom: 19px;
+    cursor: pointer;
+}
+
+.AcceptButton{
+    background-color: #0000b4;
+    color: white;
+    align-content: center;
+    font-size: 36px;
+    height: 55px;
+    cursor: pointer;
+}
+
+/* Для инпутов - сохраняем оригинальный стиль */
+input.PassInputField {
+    font-size: 16px;
+    background-color: white;
+    width: 360px;
+    color: #6B6666;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 7px;
+    height: 32px;
+    padding-left: 5px;
+    border: none;
+}
+
+/* Для кнопок в форме */
+button.AcceptButton {
+    border: none;
+    background-color: #0000b4;
+    color: white;
+    font-size: 36px;
+    height: 55px;
+    cursor: pointer;
+    width: 100%;
+}
+
+a.clearButton {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
+}

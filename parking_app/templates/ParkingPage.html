@@ -1,0 +1,85 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="utf-8">
+    <title>BMSTU - {{ parking.short_name }}</title>
+    <link rel="stylesheet" href="{% static 'Header.css' %}">
+    <link rel="stylesheet" href="{% static 'ParkingPage.css' %}">
+    <link rel="stylesheet" href="{% static 'Footer.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header_line">
+    <div class="header_content">
+      <img src="{%static 'BMSTU_Logo.svg' %}" alt="" class="bmstu_logo">
+      <div class="btn-1830">1830</div>
+      <div class="parking-text-content">
+        <div class="parking-text">Паркинг</div>
+        <div class="parking-text">МГТУ им Баумана</div>
+      </div>
+
+      <div class="navbar">
+        <div class="navbar-item">Парковки</div>
+        <img src="{%static 'Profile.svg' %}" alt="" class="profile">
+      </div>
+    </div>
+  </div>
+
+  <div class="image-container">
+    <img src="{{ parking.image_discr }}" alt="" class="parking-img">
+    <div class="parking-title">Аренда места у {{ parking.short_name }}</div>
+  </div>
+
+  <div class="parking-info">
+    <div class="parking-info-cards">
+      <div class="parking-info-card">
+        <div class="info-card-title">Назначение</div>
+        <div class="info-card-discription">31</div>
+      </div>
+      <div class="parking-info-card">
+        <div class="info-card-title">Время открытия</div>
+        <div class="info-card-discription">{{ parking.open_hour }}:00</div>
+      </div>
+      <div class="parking-info-card">
+        <div class="info-card-title">Время закрытия</div>
+        <div class="info-card-discription">{{ parking.close_hour }}:00</div>
+      </div>
+    </div>
+    <div class="parking-add-button">
+      <a href="{% url 'add_to_order' parking.id %}" class="add_to_o_btn">добавить</a>
+    </div>
+  </div>
+
+
+  <div class="footer">
+    <div class="footer-Title">© 2025 Московский государственный технический университет им. Н.Э. Баумана</div>
+    <div class="white-line"></div>
+    <div class="footer-info">
+      <div class="contacts-block">
+        <div class="contacts-title">Контакты учреждения</div>
+        <div class="social">
+          <div class="telephone">+79999686720</div>
+          <a href="https://t.me/HochuChipsov31" class="tg-me">
+            <img src="{% static 'telegram.svg' %}" alt="" class="telegram">
+          </a>
+          <a href="https://vk.com/andreshpage" class="vk-me">
+            <img src="{% static 'vk.svg' %}" alt="" class="vk">
+          </a>
+        </div>
+        <div class="telephone">andrestvlad@gmail.com</div>
+      </div>
+      <div class="address-block">
+        <div class="contacts-title">Юридический адрес</div>
+        <div class="telephone">105005, Россия, Москва, ул. 2-я Бауманская, 5</div>
+      </div>
+    </div>
+
+    <div class="disc-info">Оставаясь на сайте, вы выражаете свое согласие на обработку персональных данных и соглашаетесь с Политикой 
+      Информация об объектах, приведённая на сайте, в том числе изображения и цены, не являются офертой</div>
+  </div>
+
+  
+</body>
+</html>

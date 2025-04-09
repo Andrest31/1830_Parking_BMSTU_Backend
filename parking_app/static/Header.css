@@ -1,0 +1,59 @@
+body{
+    width: 1520px;
+    margin: 0;
+}
+
+.header_line{
+    height: 98px;
+    border-bottom: black 2px solid;
+    align-content: center;
+    position: sticky;
+}
+.header_content{
+    font-size: 12px;
+    background-color: white;
+    height: 44px;
+    margin: 0px 39px;
+    display: flex;
+    font-family: 'Dela Gothic One', sans-serif;
+}
+
+.bmstu_logo{
+    height: 58px;
+    top: 20px;
+    align-self: center;
+    margin-left: 52px;
+}
+.btn-1830{
+    align-self: center;
+    text-align: center;
+    align-content: center;
+    border: #0000b4 4px solid;
+    color: #0000b4;
+    font-size: 24px;
+    margin: 0 16px;
+    width: 176px;
+    height: 40px;
+}
+.parking-text-content{
+    align-self: center;
+    color: #0000b4;
+    display: block;
+}
+.navbar{
+    display: flex;
+    gap: 25px;
+    position: absolute;
+    align-self: center;
+    align-items: center;
+    right: 152px;
+}
+.navbar-button{
+    text-decoration: none;
+}
+.navbar-item{
+    color: black;
+}
+.profile{
+    height: 22px;
+}
