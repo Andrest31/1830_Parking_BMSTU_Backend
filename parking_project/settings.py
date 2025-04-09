@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'parking_app',
 ]
 
 MIDDLEWARE = [
@@ -74,11 +75,25 @@ WSGI_APPLICATION = 'parking_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'parking_db',
+        'USER': 'parking_user',
+        'PASSWORD': 'parking_pass',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        # 'OPTIONS': {
+        #     'client_encoding': 'windows-1251',
+        #     'connect_timeout': 5,
+        # }
     }
 }
 
+# MinIO (для локальной разработки)
+AWS_ACCESS_KEY_ID = 'minioadmin'
+AWS_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_STORAGE_BUCKET_NAME = 'parking-media'
+AWS_S3_ENDPOINT_URL = 'http://localhost:9000'  # Локальный доступ
+AWS_S3_USE_SSL = False
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
