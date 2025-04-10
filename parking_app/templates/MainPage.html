@@ -32,12 +32,13 @@
   <div class="title-items-container">
     <div class="title-item1">Парковочные места для сотрудников университета</div>
     <div class="title-item2">Доступны посуточная и бессрочная аренда мест. Срок действия абонемента любой. За абонементом закрепляется пропуск на парковку, парковаться можно на любом свободном месте. </div>
-    <div class="title-item3">Перейти</div>
+    <a href="#catalog-section" class="title-item4"><div class="title-item3">Перейти</div></a>
+
   </div>
   <img src="{% static 'Kaban.jpg' %}" alt="" class="title-img">
     </div>
 
-    <div class="catalog">
+    <div class="catalog" id="catalog-section">
       <div class="top-cont">
         <div class="Rent_line">
           <div class="Rent_title">Аренда места</div>
@@ -84,7 +85,11 @@
                 <div class="minus-button">+</div>
               </div>
               <div class="add-button">
-                <a href="{% url 'add_to_order' parking.id %}" class="add_to_o_btn">Добавить</a>
+                <a href="{% url 'add_to_order' parking.id %}" class="title-item4">
+                  <a href="#catalog-section" class="add_to_o_btn">Добавить</a>
+                
+                </a>
+
               </div>
             </div>
           </div>

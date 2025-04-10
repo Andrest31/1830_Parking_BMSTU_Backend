@@ -48,6 +48,12 @@ body{
     text-align: center;
     align-content: center;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.title-item4{
+    text-decoration: none;
+    color: inherit;
 }
 .title-img{
     position: relative;
