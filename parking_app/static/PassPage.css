@@ -11,7 +11,19 @@ body{
     width: 100%;
     height: 806px;
 }
+.inline-form {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
 
+.PassInputField {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
 .PassPage-Content{
     margin-left: 160px;
     font-family: 'Dela Gothic One', sans-serif;

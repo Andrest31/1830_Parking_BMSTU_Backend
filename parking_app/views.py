@@ -1,6 +1,8 @@
 from django.http import HttpResponse
 from .models import Parking, Order, OrderItem
 from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+from django.db import connection
 
 # Данные парковок (коллекция)
 PARKINGS_DATA = [
@@ -76,20 +78,21 @@ def MainPage(request):
     # Фильтрация парковок
     if work_hour and work_hour.isdigit():
         work_hour = int(work_hour)
-        filtered_parkings = [
-            p for p in parkings 
-            if p.open_hour <= work_hour <= p.close_hour
-        ]
-    else:
-        filtered_parkings = parkings
+        parkings = parkings.filter(open_hour__lte=work_hour, close_hour__gte=work_hour)
     
+    # Получаем черновик заявки (если есть)
     order = Order.objects.filter(user=request.user, status='draft').first()
-    total_quantity = sum(item['quantity'] for item in CURRENT_ORDER['items'])
+    
+    # Рассчитываем общее количество только если есть заявка
+    total_quantity = 0
+    if order:
+        items = order.items.select_related('parking').all()
+        total_quantity = sum(item.quantity for item in items)
     
     context = {
-        'parkings': filtered_parkings,
+        'parkings': parkings,
         'search_hour': work_hour or '',
-        'order': order,
+        'order': order,  # Может быть None
         'total_quantity': total_quantity
     }
     return render(request, 'MainPage.html', context)
@@ -112,7 +115,7 @@ def add_to_order(request, parking_id):
         status='draft',
         defaults={
             'user_name': request.user.get_full_name() or request.user.username,
-            'car_number': '',  # Можно установить значение по умолчанию
+            'state_number': '',  # Можно установить значение по умолчанию
         }
     )
     
@@ -132,21 +135,50 @@ def add_to_order(request, parking_id):
     
     return redirect('MainPage')
 
+
 def PassPage(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(Order, id=order_id, user=request.user, status='draft')
+    
     if request.method == 'POST':
-        order.user_name = request.POST.get('user_name', '')
-        order.car_number = request.POST.get('car_number', '')
+        field = request.POST.get('update_field')
+        
+        if field == 'user_name':
+            order.user_name = request.POST.get('user_name', '')
+        elif field == 'state_number':
+            order.state_number = request.POST.get('car_number', '')
+        elif field == 'deadline' and request.POST.get('expiry_date'):
+            try:
+                order.deadline = request.POST['expiry_date']
+            except (ValueError, TypeError):
+                pass  # Оставляем текущее значение при ошибке
+        
+        messages.success(request, "Изменения сохранены")
         order.save()
         return redirect('pass_page', order_id=order.id)
     
     items = order.items.select_related('parking').all()
-    return render(request, 'PassPage.html', {'order': order, 'items': items})
+    return render(request, 'PassPage.html', {
+        'order': order,
+        'items': items
+    })
 
 
-def clear_order(request):
-    CURRENT_ORDER['items'] = []
-    return redirect('pass_page', order_id=CURRENT_ORDER['id'])
+def delete_order(request, order_id):
+    # Проверяем существование заявки (но не меняем через ORM)
+    if not Order.objects.filter(id=order_id, user=request.user, status='draft').exists():
+        return HttpResponse("Заявка не найдена или уже удалена", status=404)
+    
+    # Логическое удаление через RAW SQL
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE orders SET status = 'deleted' WHERE id = %s AND user_id = %s AND status = 'draft'",
+            [order_id, request.user.id]
+        )
+        if cursor.rowcount == 0:
+            return HttpResponse("Не удалось удалить заявку", status=400)
+    
+    messages.success(request, "Заявка успешно удалена")
+    return redirect('MainPage')
 
 def remove_item(request, order_id, item_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -164,8 +196,6 @@ def update_quantity(request, order_id, item_id, action):
     # Изменяем количество
     if action == 'increase':
         item.quantity += 1
-    elif action == 'remove':
-        item.delete()
     elif action == 'decrease':
         if item.quantity > 1:  # Не позволяем уменьшить ниже 1
             item.quantity -= 1

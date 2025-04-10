@@ -41,9 +41,9 @@
       <div class="top-cont">
         <div class="Rent_line">
           <div class="Rent_title">Аренда места</div>
-          <a href="{% url 'pass_page' order.id %}">
+          <a href="{% if order %}{% url 'pass_page' order.id %}{% else %}#{% endif %}" 
+            class="{% if not order %}disabled-link{% endif %}">
             <img src="{%static 'list.svg' %}" alt="" class="Pass-button">
-          </img>
           </a>
         </div>
         <div class="search-line">
