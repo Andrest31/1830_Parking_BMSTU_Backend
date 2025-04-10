@@ -148,16 +148,30 @@ def clear_order(request):
     CURRENT_ORDER['items'] = []
     return redirect('pass_page', order_id=CURRENT_ORDER['id'])
 
-def remove_item(request, parking_id):
-    CURRENT_ORDER['items'] = [item for item in CURRENT_ORDER['items'] if item['parking_id'] != parking_id]
-    return redirect('pass_page', order_id=CURRENT_ORDER['id'])
+def remove_item(request, order_id, item_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    item = get_object_or_404(OrderItem, id=item_id, order=order)
+    item.delete()
+    return redirect('pass_page', order_id=order.id)
 
-def update_quantity(request, parking_id, action):
-    for item in CURRENT_ORDER['items']:
-        if item['parking_id'] == parking_id:
-            if action == 'increase':
-                item['quantity'] += 1
-            elif action == 'decrease' and item['quantity'] > 1:
-                item['quantity'] -= 1
-            break
-    return redirect('pass_page', order_id=CURRENT_ORDER['id'])
+def update_quantity(request, order_id, item_id, action):
+    # Получаем заявку и проверяем права доступа
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # Получаем конкретный элемент заявки
+    item = get_object_or_404(OrderItem, id=item_id, order=order)
+    
+    # Изменяем количество
+    if action == 'increase':
+        item.quantity += 1
+    elif action == 'remove':
+        item.delete()
+    elif action == 'decrease':
+        if item.quantity > 1:  # Не позволяем уменьшить ниже 1
+            item.quantity -= 1
+    
+    # Сохраняем изменения
+    item.save()
+    
+    # Перенаправляем обратно на страницу заявки
+    return redirect('pass_page', order_id=order.id)

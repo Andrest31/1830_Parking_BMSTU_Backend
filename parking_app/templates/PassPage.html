@@ -43,7 +43,7 @@
             <div class="PassPageDiscription">Гос номер ТС</div>
             <input type="text" name="car_number" class="PassInputField" value="{{ order.state_number }}" required>
             <div class="PassPageDiscription">Срок действия абонемента</div>
-            <input type="date" name="expiry_date" class="PassInputField" required>
+            <input type="date" name="expiry_date" class="PassInputField" value="{{ order.deadline }}" required>
           </div>
   
           <div class="right-block">
@@ -57,10 +57,10 @@
                   <div class="pass-parking-name">{{ item.parking.short_name }}</div>  
                 </div>
                 <div class="pass-card-right-block">
-                  <a href="{% url 'update_quantity' item.quantity 'decrease' %}" class="pass-minus-button">-</a>
+                  <a href="{% url 'update_quantity' order.id item.id 'decrease' %}" class="pass-minus-button">-</a>
                   <div class="pass-quantity">места: {{ item.quantity }}</div>
-                  <a href="{% url 'update_quantity' item.quantity 'increase' %}" class="pass-minus-button">+</a>
-                  <a href="{% url 'remove_item' item.parking_id %}">
+                  <a href="{% url 'update_quantity' order.id item.id 'increase' %}" class="pass-minus-button">+</a>
+                  <a href="{% url 'remove_item' order.id item.id %}">
                     <img src="{% static 'trash.svg' %}" alt="" class="trash-button">
                   </a>
                 </div>
