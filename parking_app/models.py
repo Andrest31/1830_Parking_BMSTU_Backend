@@ -9,8 +9,8 @@ class Parking(models.Model):
     place = models.CharField(max_length=255)
     open_hour = models.IntegerField()
     close_hour = models.IntegerField()
-    image_url = models.URLField(max_length=500)
-    description_url = models.URLField(max_length=500)
+    image_url = models.URLField(max_length=500, blank=True, default='')
+    description_url = models.URLField(max_length=500, blank=True, default='')
     description = models.TextField()
     is_active = models.BooleanField(default=True)
 
