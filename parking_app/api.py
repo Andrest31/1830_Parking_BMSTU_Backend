@@ -1,6 +1,9 @@
+
+from datetime import datetime
+from django.forms import ValidationError
 from requests import Response
 from .models import Parking, Order, OrderItem
-from .serializers import ParkingSerializer, OrderItemSerializer, OrderSerializer
+from .serializers import OrderDetailSerializer, OrderItemWithImageSerializer, ParkingSerializer, OrderItemSerializer, OrderItemUpdateSerializer, OrderItemDeleteSerializer, OrderSerializer
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -145,31 +148,66 @@ def add_to_order(request, pk):
 # POST /api/parkings/<id>/image/ - добавление изображения
 @api_view(['POST'])
 def parking_upload_image(request, pk):
+    """
+    Загрузка/обновление изображения для парковки
+    Удаляет старое изображение из MinIO при замене
+    """
+    # 1. Получаем парковку или возвращаем 404
     parking = get_object_or_404(Parking, pk=pk)
     
+    # 2. Проверяем наличие файла в запросе
     if 'image' not in request.FILES:
         return Response(
-            {'error': 'No image file provided'}, 
+            {'error': 'No image file provided in request'},
             status=status.HTTP_400_BAD_REQUEST
         )
+    
     image_file = request.FILES['image']
-    minio_client = Minio(
-        access_key=settings.MINIO_ACCESS_KEY,
-        secret_key=settings.MINIO_SECRET_KEY,
-        secure=settings.MINIO_USE_SSL
-    )
+    
+    # 3. Проверяем допустимый тип файла
+    allowed_extensions = ['jpg', 'jpeg', 'png', 'gif']
+    file_extension = image_file.name.split('.')[-1].lower()
+    
+    if file_extension not in allowed_extensions:
+        return Response(
+            {'error': f'Invalid file type. Allowed: {", ".join(allowed_extensions)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # 4. Инициализируем MinIO клиент с обработкой ошибок
+    try:
+        minio_client = Minio(
+            settings.MINIO_ENDPOINT,  # Добавьте эту настройку
+            access_key=settings.MINIO_ACCESS_KEY,
+            secret_key=settings.MINIO_SECRET_KEY,
+            secure=settings.MINIO_USE_SSL
+        )
+        
+        # Проверяем доступность MinIO
+        if not minio_client.bucket_exists(settings.MINIO_BUCKET_NAME):
+            return Response(
+                {'error': 'MinIO bucket does not exist'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    except Exception as e:
+        return Response(
+            {'error': f'MinIO connection error: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
     
     try:
+        # 5. Удаляем старое изображение (если есть)
         if parking.image_url:
             try:
-                old_image_path = parking.image_url.split(f"{settings.MINIO_BUCKET_NAME}/")[-1]
-                minio_client.remove_object(settings.MINIO_BUCKET_NAME, old_image_path)
+                old_image_name = parking.image_url.split('/')[-1]
+                minio_client.remove_object(settings.MINIO_BUCKET_NAME, old_image_name)
             except Exception as e:
-                print(f"Error deleting old image: {str(e)}")
+                print(f'Warning: failed to delete old image: {str(e)}')
         
-        file_extension = image_file.name.split('.')[-1]
+        # 6. Генерируем уникальное имя файла
         new_filename = f"parking-{pk}-{int(time.time())}.{file_extension}"
         
+        # 7. Загружаем новое изображение
         minio_client.put_object(
             settings.MINIO_BUCKET_NAME,
             new_filename,
@@ -178,6 +216,7 @@ def parking_upload_image(request, pk):
             content_type=image_file.content_type
         )
         
+        # 8. Обновляем URL в базе
         new_image_url = f"{settings.MINIO_PUBLIC_URL}/{settings.MINIO_BUCKET_NAME}/{new_filename}"
         parking.image_url = new_image_url
         parking.save()
@@ -186,7 +225,8 @@ def parking_upload_image(request, pk):
             {
                 'status': 'success',
                 'image_url': new_image_url,
-                'parking_id': pk
+                'parking_id': pk,
+                'filename': new_filename
             },
             status=status.HTTP_200_OK
         )
@@ -260,18 +300,33 @@ def order_list(request):
 # GET /api/orders/<id>/ - получение заявки с услугами
 @api_view(['GET'])
 def order_detail(request, pk):
-    order = get_object_or_404(Order, pk=pk)
-    if order.user != get_fixed_user() and not get_fixed_user().is_staff:
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    """
+    Получение детальной информации о заявке со списком услуг и их изображениями
+    """
+    try:
+        order = Order.objects.get(pk=pk)
+        if order.user != get_fixed_user() and not get_fixed_user().is_staff:
+            return Response(
+                {"error": "Доступ запрещен - вы не являетесь владельцем заявки"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        order_serializer = OrderDetailSerializer(order)
+        order_items = OrderItem.objects.filter(order=order).select_related('parking')
+        
+        items_serializer = OrderItemWithImageSerializer(order_items, many=True)
+        
+        response_data = order_serializer.data
+        response_data['items'] = items_serializer.data
+        
+        return Response(response_data)
     
-    order_serializer = OrderSerializer(order)
-    items = OrderItem.objects.filter(order=order)
-    items_serializer = OrderItemSerializer(items, many=True)
+    except Order.DoesNotExist:
+        return Response(
+            {"error": "Заявка не найдена"},
+            status=status.HTTP_404_NOT_FOUND
+        )
     
-    response_data = order_serializer.data
-    response_data['items'] = items_serializer.data
-    return Response(response_data)
-
 # PUT /api/orders/<id>/ - изменение заявки
 @api_view(['PUT'])
 def order_update(request, pk):
@@ -281,48 +336,76 @@ def order_update(request, pk):
     """
     try:
         # 1. Получаем заявку
-        order = Order.objects.get(pk=pk, user=get_fixed_user())
-        
-        # 2. Проверяем, что заявка в статусе черновика
+        try:
+            order = Order.objects.get(pk=pk, user=get_fixed_user())
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 2. Проверяем статус заявки
         if order.status != 'draft':
             return Response(
                 {"error": "Only draft orders can be modified"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # 3. Проверяем и фильтруем разрешенные поля
-        allowed_fields = {'user_name', 'state_number', 'deadline'}
-        update_data = {
-            k: v for k, v in request.data.items() 
-            if k in allowed_fields
-        }
-        
-        if not update_data:
+
+        # 3. Проверяем наличие данных в запросе
+        if not request.data:
             return Response(
-                {"error": "No valid fields provided for update"},
+                {"error": "No data provided for update"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # 4. Обновляем заявку
-        serializer = OrderSerializer(
-            instance=order, 
-            data=update_data, 
-            partial=True
-        )
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        
+
+        # 4. Фильтруем разрешенные поля
+        allowed_fields = {'user_name', 'state_number', 'deadline'}
+        update_data = {
+            k: v for k, v in request.data.items()
+            if k in allowed_fields and v is not None
+        }
+
+        if not update_data:
+            return Response(
+                {"error": "No valid fields provided for update. Allowed fields: user_name, state_number, deadline"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 5. Валидация и преобразование данных
+        if 'deadline' in update_data:
+            try:
+                # Преобразуем строку в дату, если нужно
+                if isinstance(update_data['deadline'], str):
+                    update_data['deadline'] = datetime.strptime(update_data['deadline'], '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format for 'deadline'. Use YYYY-MM-DD"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # 6. Обновляем заявку
+        for field, value in update_data.items():
+            setattr(order, field, value)
+
+        try:
+            order.full_clean()  # Валидация модели
+            order.save()
+        except ValidationError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 7. Возвращаем обновленные данные
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
+    except Exception as e:
+        # Логируем неожиданные ошибки
+        print(f"Unexpected error in order_update: {str(e)}")
         return Response(
-            serializer.errors, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    except Order.DoesNotExist:
-        return Response(
-            {"error": "Order not found or not owned by user"},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Internal server error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 # PUT /api/orders/<id>/submit/ - формирование заявки
@@ -337,9 +420,9 @@ def order_submit(request, pk):
         )
     
     # Проверка обязательных полей
-    if not order.user_name or not order.state_number:
+    if not order.user_name or not order.state_number or not order.deadline:
         return Response(
-            {'error': 'User name and car number are required'},
+            {'error': 'User name, car number and deadline are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -365,8 +448,8 @@ def order_complete(request, pk):
         order.status = 'completed'
         # Расчет стоимости
         items = OrderItem.objects.filter(order=order)
-        total = sum(item.parking.price * item.quantity for item in items)
-        order.total_price = total
+        total_quantity = sum(item.quantity for item in items)
+        order.total_quantity = total_quantity
     else:
         order.status = 'rejected'
     
@@ -393,37 +476,100 @@ def order_delete(request, pk):
 
 
 
-# DELETE /api/order-items/<id>/ - удаление из заявки
 @api_view(['DELETE'])
-def order_item_delete(request, pk):
-    item = get_object_or_404(OrderItem, pk=pk)
-    order = item.order
-    
-    if order.user != get_fixed_user() or order.status != 'draft':
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    
-    item.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-# PUT /api/order-items/<id>/ - изменение количества
-@api_view(['PUT'])
-def order_item_update(request, pk):
-    item = get_object_or_404(OrderItem, pk=pk)
-    order = item.order
-    
-    if order.user != get_fixed_user() or order.status != 'draft':
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    
-    quantity = request.data.get('quantity')
-    if not quantity or not str(quantity).isdigit() or int(quantity) < 1:
+def order_item_delete(request, order_id):
+    try:
+        # Получаем заявку
+        order = Order.objects.get(pk=order_id)
+        
+        # Проверяем права доступа
+        if order.user != get_fixed_user():
+            return Response(
+                {"error": "Forbidden - you are not the owner of this order"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Проверяем статус заявки
+        if order.status != 'draft':
+            return Response(
+                {"error": "Can only delete items from draft orders"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Валидация входных данных
+        serializer = OrderItemDeleteSerializer(data=request.query_params)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        parking_id = serializer.validated_data['parking_id']
+        
+        # Удаляем элемент
+        deleted_count, _ = OrderItem.objects.filter(
+            order=order,
+            parking_id=parking_id
+        ).delete()
+        
+        if deleted_count == 0:
+            return Response(
+                {"error": "Item not found in order"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
         return Response(
-            {'error': 'Invalid quantity'},
-            status=status.HTTP_400_BAD_REQUEST
+            {"message": "Item successfully deleted from order"},
+            status=status.HTTP_200_OK
         )
+        
+    except Order.DoesNotExist:
+        return Response(
+            {"error": "Order not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        print(f"Error deleting order item: {str(e)}")
+        return Response(
+            {"error": "Internal server error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['PUT'])
+def order_item_update(request, order_id, parking_id):  # Добавлен parking_id
+    try:
+        order = Order.objects.get(pk=order_id)
+        
+        if order.user != get_fixed_user() or order.status != 'draft':
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        # Получаем элемент заявки по order_id и parking_id
+        item = OrderItem.objects.get(order=order, parking_id=parking_id)
+        
+        quantity = request.data.get('quantity')
+        if not quantity or not str(quantity).isdigit() or int(quantity) < 1:
+            return Response(
+                {'error': 'Invalid quantity'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        item.quantity = int(quantity)
+        item.save()
+        return Response(OrderItemSerializer(item).data)
     
-    item.quantity = int(quantity)
-    item.save()
-    return Response(OrderItemSerializer(item).data)
+    except Order.DoesNotExist:
+        return Response(
+            {"error": "Order not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except OrderItem.DoesNotExist:
+        return Response(
+            {"error": "Parking not found in order"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        print(f"Error updating order item: {str(e)}")
+        return Response(
+            {"error": "Internal server error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 # POST /api/users/register/ - регистрация
 @api_view(['POST'])

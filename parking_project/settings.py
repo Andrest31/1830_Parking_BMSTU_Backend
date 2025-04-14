@@ -79,7 +79,7 @@ DATABASES = {
         'NAME': 'parking_db',
         'USER': 'parking_user',
         'PASSWORD': 'parking_pass',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
         # 'OPTIONS': {
         #     'client_encoding': 'windows-1251',
@@ -94,6 +94,12 @@ AWS_SECRET_ACCESS_KEY = 'minioadmin'
 AWS_STORAGE_BUCKET_NAME = 'parking-media'
 AWS_S3_ENDPOINT_URL = 'http://localhost:9000'  # Локальный доступ
 AWS_S3_USE_SSL = False
+MINIO_ENDPOINT = 'minio:9000'  # или 'localhost:9000'
+MINIO_ACCESS_KEY = 'minioadmin'
+MINIO_SECRET_KEY = 'minioadmin'
+MINIO_USE_SSL = False  # True для продакшена
+MINIO_BUCKET_NAME = 'images'
+MINIO_PUBLIC_URL = f'http://{MINIO_ENDPOINT}'  # или ваш домен
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

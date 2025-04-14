@@ -22,8 +22,8 @@ urlpatterns = [
     path('orders/<int:pk>/delete/', api.order_delete, name='order-delete'),
     
     # OrderItem endpoints
-    path('order-items/<int:pk>/delete/', api.order_item_delete, name='order-item-delete'),
-    path('order-items/<int:pk>/update/', api.order_item_update, name='order-item-update'),
+    path('orders/<int:order_id>/items/', api.order_item_delete, name='order-item-delete'),
+    path('orders/<int:order_id>/items/<int:parking_id>/', api.order_item_update, name='order-item-update'),
     
     # User endpoints (заглушки для ЛР4)
     path('users/register/', api.user_register, name='user-register'),

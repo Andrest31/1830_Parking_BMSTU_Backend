@@ -37,6 +37,8 @@ class Order(models.Model):
     deadline = models.DateField(default=timezone.now)  # Новое поле
     user_name = models.CharField(max_length=100)
     state_number = models.CharField(max_length=20)
+    total_quantity = models.PositiveIntegerField(default=1)
+
     
     def __str__(self):
         return f"Order #{self.id} - {self.get_status_display()}"
