@@ -66,6 +66,20 @@ TEMPLATES = [
         },
     },
 ]
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # Обратите внимание на имя сервиса "redis"!
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "parking_cache"
+    }
+}
+
+# Сессии храним в Redis
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 WSGI_APPLICATION = 'parking_project.wsgi.application'
 
